@@ -708,14 +708,16 @@ async function send(){
   hist.push({role:'user',content:v});
   const typ=addMsg('Thinking...','msg-typ');
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
+    const payload={model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:hist};
+    const proxyUrl='https://corsproxy.io/?url='+encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const r=await fetch(proxyUrl,{
       method:'POST',
       headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true','x-api-key':API_KEY},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:hist})
+      body:JSON.stringify(payload)
     });
     const data=await r.json();
     typ.remove();
-    if(data.error){addMsg('Error: '+data.error.message,'msg-bot');return;}
+    if(data.error){addMsg('Error: '+data.error.message+'. Please try again.','msg-bot');return;}
     const reply=data.content&&data.content[0]?data.content[0].text:'Sorry, could not get a response.';
     addMsg(reply,'msg-bot');
     hist.push({role:'assistant',content:reply});
